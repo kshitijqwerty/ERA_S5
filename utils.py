@@ -4,18 +4,6 @@ import torch
 from torchsummary import summary
 
 
-def visualize_data(dataloader):
-    batch_data, batch_label = next(iter(dataloader)) # load the data loader and get the next data
-    fig = plt.figure() # initialize the plt figure object
-
-    for i in range(12): # run for 12 steps
-        plt.subplot(3,4,i+1) # Create a subplot with 3x4 grid and selecting which subplot to work on right now
-        plt.tight_layout() # plt inner function to use tighter layout for minimized layouts
-        plt.imshow(batch_data[i].squeeze(0), cmap='gray') # Draw the images and remove the dim with size = 1 , with a color map of gray
-        plt.title(batch_label[i].item()) # print the titles with the image labels
-        plt.xticks([])
-        plt.yticks([])
-
 class ModelHelper:
     def __init__(self, model, device, train_loader, test_loader):
         # Data to plot accuracy and loss graphs
@@ -125,4 +113,3 @@ class ModelHelper:
     def get_model_summary(self, input_size):
         temp_model = self.model.to("cpu")
         summary(temp_model, input_size=input_size)
-
