@@ -4,6 +4,18 @@ import torch
 from torchsummary import summary
 
 
+def visualize_data(dataloader):
+    batch_data, batch_label = next(iter(dataloader)) # load the data loader and get the next data
+    fig = plt.figure() # initialize the plt figure object
+
+    for i in range(12): # run for 12 steps
+        plt.subplot(3,4,i+1) # Create a subplot with 3x4 grid and selecting which subplot to work on right now
+        plt.tight_layout() # plt inner function to use tighter layout for minimized layouts
+        plt.imshow(batch_data[i].squeeze(0), cmap='gray') # Draw the images and remove the dim with size = 1 , with a color map of gray
+        plt.title(batch_label[i].item()) # print the titles with the image labels
+        plt.xticks([])
+        plt.yticks([])
+
 class ModelHelper:
     def __init__(self, model, device, train_loader, test_loader):
         # Data to plot accuracy and loss graphs
@@ -12,16 +24,19 @@ class ModelHelper:
         self.train_acc = []
         self.test_acc = []
         if device == "mps" and torch.backends.mps.is_available():
+            # Apple Silicon GPU
             self.device = "mps"
         elif device == "cuda" and torch.cuda.is_available():
+            # nVidia GPU
             self.device = "cuda"
         else:
+            # CPU
             self.device = "cpu"
         self.model = model.to(self.device)
         self.train_loader = train_loader
         self.test_loader = test_loader
 
-    def GetCorrectPredCount(self, pPrediction, pLabels):
+    def _GetCorrectPredCount(self, pPrediction, pLabels):
         return pPrediction.argmax(dim=1).eq(pLabels).sum().item()
 
     def train(self, optimizer, scheduler, criterion, num_epochs):
@@ -56,7 +71,7 @@ class ModelHelper:
             loss.backward()
             optimizer.step()
 
-            correct += self.GetCorrectPredCount(pred, target)
+            correct += self._GetCorrectPredCount(pred, target)
             processed += len(data)
 
             pbar.set_description(
@@ -81,7 +96,7 @@ class ModelHelper:
                     output, target, reduction="sum"
                 ).item()  # sum up batch loss
 
-                correct += self.GetCorrectPredCount(output, target)
+                correct += self._GetCorrectPredCount(output, target)
 
         test_loss /= len(self.test_loader.dataset)
         self.test_acc.append(100.0 * correct / len(self.test_loader.dataset))
@@ -107,6 +122,7 @@ class ModelHelper:
         axs[1, 1].plot(self.test_acc)
         axs[1, 1].set_title("Test Accuracy")
 
-    def get_summary(self, input_size):
-        temp_model = self.model.to('cpu')
+    def get_model_summary(self, input_size):
+        temp_model = self.model.to("cpu")
         summary(temp_model, input_size=input_size)
+
